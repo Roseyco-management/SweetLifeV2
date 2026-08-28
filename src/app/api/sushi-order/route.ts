@@ -1,8 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { after, NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { Resend } from 'resend';
 import { validateSushiOrder, type SushiOrderFormData } from '@/lib/sushiValidation';
 import { getSizeByPieces } from '@/data/sushiData';
 import { escapeHtml } from '@/lib/escapeHtml';
+import {
+  ANALYTICS_CONSENT_COOKIE,
+  verifyGrantedAnalyticsConsent,
+} from '@/lib/analyticsConsent';
+import { getGoogleConversionConfiguration } from '@/lib/googleConversionConfig';
+import { reportAcceptedSushiPreOrder } from '@/lib/googleConversionTracking';
 
 // Initialize Resend lazily to avoid build-time errors when API key is not set
 function getResendClient(): Resend | null {
@@ -12,6 +19,15 @@ function getResendClient(): Resend | null {
     return null;
   }
   return new Resend(apiKey);
+}
+
+function getGoogleAnalyticsClientId(gaCookie: string | undefined): string | null {
+  if (!gaCookie) {
+    return null;
+  }
+
+  const clientId = gaCookie.split('.').slice(-2).join('.');
+  return /^\d+\.\d+$/.test(clientId) ? clientId : null;
 }
 
 export async function POST(request: NextRequest) {
@@ -153,11 +169,40 @@ export async function POST(request: NextRequest) {
       // Log for debugging but continue with success response
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Order submitted successfully',
       paymentLink,
     });
+
+    const trackingConfig = getGoogleConversionConfiguration();
+    const hasSignedConsent = Boolean(
+      trackingConfig &&
+        verifyGrantedAnalyticsConsent(
+          request.cookies.get(ANALYTICS_CONSENT_COOKIE)?.value,
+          trackingConfig.apiSecret
+        )
+    );
+    const clientId = getGoogleAnalyticsClientId(request.cookies.get('_ga')?.value);
+
+    if (trackingConfig && hasSignedConsent && clientId && sizeInfo) {
+      try {
+        const orderReference = `sushi-order-${randomUUID()}`;
+        after(() =>
+          reportAcceptedSushiPreOrder({
+            config: trackingConfig,
+            clientId,
+            pieces: sizeInfo.pieces,
+            orderReference,
+          })
+        );
+      } catch {
+        // Tracking is optional and must never alter an accepted order response.
+        console.error('[tracking] Could not schedule sushi conversion reporting.');
+      }
+    }
+
+    return response;
   } catch (error) {
     console.error('Sushi order API error:', error);
     return NextResponse.json(

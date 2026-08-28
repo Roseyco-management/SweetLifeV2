@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import WhatsAppWidget from "@/components/ui/WhatsAppWidget";
 import StructuredData from "@/components/seo/StructuredData";
+import { GoogleTracking } from "@/components/analytics/GoogleTracking";
 import { DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -81,12 +82,14 @@ export default function RootLayout({
         <StructuredData />
       </head>
       <body className={`${plusJakartaSans.variable} ${playfairDisplay.variable} font-sans antialiased`}>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-grow pt-16">{children}</main>
-          <Footer />
-          <WhatsAppWidget />
-        </div>
+        <GoogleTracking>
+          <div className="flex flex-col min-h-screen">
+            <Header />
+            <main className="flex-grow pt-16">{children}</main>
+            <Footer />
+            <WhatsAppWidget />
+          </div>
+        </GoogleTracking>
         {/* explicit mode: auto would also collect on preview deployments (they run production bundles) */}
         <Analytics mode={process.env.VERCEL_ENV === "production" ? "production" : "development"} />
       </body>

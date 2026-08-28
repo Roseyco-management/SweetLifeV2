@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Send, ExternalLink, Check, AlertTriangle, ChevronRight } from 'lucide-react';
+import { ExternalLink, Check, AlertTriangle, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { sushiVariations, sushiSizes, getSizeByPieces } from '@/data/sushiData';
 import { getMinDateTime, validatePickupDateTime } from '@/lib/sushiValidation';
