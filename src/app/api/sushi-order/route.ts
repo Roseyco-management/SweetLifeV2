@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { Resend } from 'resend';
 import { validateSushiOrder, type SushiOrderFormData } from '@/lib/sushiValidation';
 import { getSizeByPieces } from '@/data/sushiData';
 import { escapeHtml } from '@/lib/escapeHtml';
+import { getGoogleAnalyticsClientId } from '@/lib/googleAnalyticsClientId';
+import { getGoogleTrackingConfiguration } from '@/lib/googleTrackingServer';
+import {
+  createSushiConversionProof,
+  SUSHI_CONVERSION_PROOF_COOKIE,
+  SUSHI_CONVERSION_PROOF_MAX_AGE_SECONDS,
+} from '@/lib/sushiConversionProof';
+
+const CONVERSION_PROOF_PATH = '/api/conversions/sushi-preorder';
 
 // Initialize Resend lazily to avoid build-time errors when API key is not set
 function getResendClient(): Resend | null {
@@ -153,11 +163,42 @@ export async function POST(request: NextRequest) {
       // Log for debugging but continue with success response
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Order submitted successfully',
       paymentLink,
     });
+
+    // This short-lived, HttpOnly proof is intentionally issued only after
+    // validation succeeds, consent was explicitly granted, and every tracking
+    // setting exists. It contains no customer details and is never JSON data.
+    const trackingConfig = getGoogleTrackingConfiguration();
+    const clientId = getGoogleAnalyticsClientId(request.cookies.get('_ga')?.value);
+    if (body.trackingConsent === true && sizeInfo && trackingConfig && clientId) {
+      try {
+        const proof = createSushiConversionProof(
+          {
+            pieces: sizeInfo.pieces,
+            orderReference: `sushi-preorder-${randomUUID()}`,
+            clientId,
+          },
+          trackingConfig.apiSecret
+        );
+
+        response.cookies.set(SUSHI_CONVERSION_PROOF_COOKIE, proof, {
+          httpOnly: true,
+          maxAge: SUSHI_CONVERSION_PROOF_MAX_AGE_SECONDS,
+          path: CONVERSION_PROOF_PATH,
+          sameSite: 'strict',
+          secure: process.env.NODE_ENV === 'production',
+        });
+      } catch {
+        // Conversion tracking must never alter an accepted order response.
+        console.error('[tracking] Could not issue sushi conversion proof.');
+      }
+    }
+
+    return response;
   } catch (error) {
     console.error('Sushi order API error:', error);
     return NextResponse.json(
