@@ -2,6 +2,8 @@
 // AEO — machine-readable site summary for AI answer engines (llms.txt convention:
 // https://llmstxt.org). Static text served at /llms.txt. Complements robots.ts
 // (which explicitly allows AI crawlers). Ref: ElevateoCo/SEO-Resources.
+import { PUBLIC_BUSINESS_FACTS } from '@/lib/businessFacts';
+
 export const dynamic = 'force-static';
 
 const BASE_URL = 'https://sweetlife.cafe';
@@ -21,15 +23,15 @@ function buildLlmsTxt(): string {
 
   return `# Sweet Life Cafe
 
-> Family-owned Korean cafe and restaurant in Newry, Northern Ireland, serving Bingsu shaved ice desserts, bubble tea, sushi, breakfast, and lunch. Open Mon-Wed 08:00-18:00, Thu-Fri 08:00-20:00, Sat 09:00-18:00, closed Sunday.
+> Family-owned Korean cafe and restaurant in Newry, Northern Ireland, serving Bingsu shaved ice desserts, bubble tea, sushi, breakfast, and lunch. Current business contact details, hours, and official social profiles are awaiting owner confirmation.
 
 ## About
 - Name: Sweet Life Cafe
 - Location: 12 Monaghan Street, Newry, County Down, BT35 6AA, Northern Ireland
-- Phone: +44 7716 508513
+- Phone: ${PUBLIC_BUSINESS_FACTS.llms.phone}
 - Email: info@sweetlife.cafe
-- Hours: Mon-Wed 08:00-18:00, Thu-Fri 08:00-20:00, Sat 09:00-18:00, Sunday closed
-- Instagram: https://www.instagram.com/sweet_life_ireland
+- Hours: ${PUBLIC_BUSINESS_FACTS.llms.hours}
+- Official social profiles: ${PUBLIC_BUSINESS_FACTS.llms.socialProfiles}
 
 ## Key pages
 ${pages}
