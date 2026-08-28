@@ -5,9 +5,7 @@ import { ExternalLink, Check, AlertTriangle, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { sushiVariations, sushiSizes, getSizeByPieces } from '@/data/sushiData';
 import { getMinDateTime, validatePickupDateTime } from '@/lib/sushiValidation';
-import { reportSushiPreOrderCompletion } from '@/lib/googleTrackingClient';
 import { ScrollReveal, FadeIn } from '@/components/motion';
-import { useConsent } from '@/components/analytics/ConsentProvider';
 
 interface FormData {
   fullName: string;
@@ -18,7 +16,6 @@ interface FormData {
 }
 
 const SushiOrderForm = () => {
-  const { state: trackingConsent } = useConsent();
   const [selectedVariation, setSelectedVariation] = useState('Mix');
   const [selectedSize, setSelectedSize] = useState(30);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -68,14 +65,12 @@ const SushiOrderForm = () => {
 
       const response = await fetch('/api/sushi-order', {
         method: 'POST',
-        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           variation: selectedVariation,
           pieces: selectedSize,
           price: selectedPrice?.price || 0,
-          trackingConsent: trackingConsent === 'granted',
         }),
       });
 
@@ -84,10 +79,6 @@ const SushiOrderForm = () => {
       if (response.ok && result.success) {
         setPaymentLink(selectedPrice?.paymentLink || '');
         setShowConfirmation(true);
-        void reportSushiPreOrderCompletion({
-          consent: trackingConsent,
-          pieces: selectedSize,
-        });
       } else {
         setSubmitError(
           result.error || 'There was an error submitting your order. Please try again.'

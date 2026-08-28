@@ -1,24 +1,24 @@
 import type { ReactNode } from 'react';
+import { getGoogleConversionConfiguration } from '@/lib/googleConversionConfig';
 import { ConsentDefaultsScript } from './ConsentDefaultsScript';
 import { ConsentProvider } from './ConsentProvider';
 import { CookieBanner } from './CookieBanner';
 import { GoogleTagLoader } from './GoogleTagLoader';
 
 export function GoogleTracking({ children }: { children: ReactNode }) {
-  const tagId = process.env.NEXT_PUBLIC_GOOGLE_TAG_ID?.trim();
-  const trackingEnabled = Boolean(tagId);
+  const config = getGoogleConversionConfiguration();
+
+  if (!config) {
+    return <>{children}</>;
+  }
 
   return (
     <>
-      {trackingEnabled ? <ConsentDefaultsScript /> : null}
-      <ConsentProvider trackingEnabled={trackingEnabled}>
+      <ConsentDefaultsScript />
+      <ConsentProvider>
         {children}
-        {tagId ? (
-          <>
-            <CookieBanner />
-            <GoogleTagLoader tagId={tagId} />
-          </>
-        ) : null}
+        <CookieBanner />
+        <GoogleTagLoader tagId={config.measurementId} />
       </ConsentProvider>
     </>
   );

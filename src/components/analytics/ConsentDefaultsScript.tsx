@@ -1,12 +1,9 @@
 import Script from 'next/script';
 
-/**
- * Consent Mode v2 defaults must run before the Google tag can load. The tag is
- * still basic-consent gated below, so no Google request is made until accept.
- */
+/** Consent Mode v2 defaults run before any Google tag can be loaded. */
 export function ConsentDefaultsScript() {
   return (
-    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document -- RootLayout renders this component site-wide.
+    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document -- Rendered from RootLayout for the whole site.
     <Script
       id="google-consent-defaults"
       strategy="beforeInteractive"
