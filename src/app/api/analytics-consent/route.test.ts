@@ -65,15 +65,12 @@ describe('analytics consent endpoint', () => {
     expect(crossOrigin.headers.get('set-cookie')).toBeNull();
   });
 
-  it('sets a signed grant for a same-origin choice and clears it on revoke', async () => {
+  it('sets a signed grant for a same-origin choice', async () => {
     process.env.NEXT_PUBLIC_GOOGLE_TAG_ID = 'G-TEST123';
     process.env.GA4_MEASUREMENT_PROTOCOL_API_SECRET = 'test-api-secret';
 
     const grant = await POST(
       makeRequest('POST', { origin: 'http://localhost', body: { action: 'grant' } })
-    );
-    const revoke = await POST(
-      makeRequest('POST', { origin: 'http://localhost', body: { action: 'revoke' } })
     );
 
     expect(grant.status).toBe(200);
@@ -82,10 +79,29 @@ describe('analytics consent endpoint', () => {
     );
     expect(grant.headers.get('set-cookie')).toContain('HttpOnly');
     expect(grant.headers.get('set-cookie')).toContain('SameSite=strict');
-    expect(revoke.status).toBe(200);
-    expect(revoke.headers.get('set-cookie')).toContain(
-      `${ANALYTICS_CONSENT_COOKIE}=;`
+  });
+
+  it('persists a signed denial across reload after a visitor rejects analytics', async () => {
+    process.env.NEXT_PUBLIC_GOOGLE_TAG_ID = 'G-TEST123';
+    process.env.GA4_MEASUREMENT_PROTOCOL_API_SECRET = 'test-api-secret';
+
+    const rejection = await POST(
+      makeRequest('POST', { origin: 'http://localhost', body: { action: 'revoke' } })
     );
+    const setCookie = rejection.headers.get('set-cookie');
+    const cookieValue = setCookie?.match(
+      new RegExp(`${ANALYTICS_CONSENT_COOKIE}=([^;]+)`)
+    )?.[1];
+    const reloaded = await GET(
+      makeRequest('GET', {
+        cookie: `${ANALYTICS_CONSENT_COOKIE}=${cookieValue}`,
+      })
+    );
+
+    expect(rejection.status).toBe(200);
+    expect(await rejection.json()).toEqual({ state: 'denied' });
+    expect(cookieValue).toBeTruthy();
+    expect(await reloaded.json()).toEqual({ state: 'denied' });
   });
 
   it('reports granted only for a valid signed cookie', async () => {

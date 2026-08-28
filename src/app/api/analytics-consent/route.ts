@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   ANALYTICS_CONSENT_COOKIE,
   ANALYTICS_CONSENT_MAX_AGE_SECONDS,
+  createAnalyticsConsent,
   createGrantedAnalyticsConsent,
-  verifyGrantedAnalyticsConsent,
+  verifyAnalyticsConsent,
 } from '@/lib/analyticsConsent';
 import { getGoogleConversionConfiguration } from '@/lib/googleConversionConfig';
 
@@ -50,13 +51,13 @@ export async function GET(request: NextRequest) {
     return new NextResponse(null, { status: 204, headers: noStoreHeaders() });
   }
 
-  const consent = verifyGrantedAnalyticsConsent(
+  const consent = verifyAnalyticsConsent(
     request.cookies.get(ANALYTICS_CONSENT_COOKIE)?.value,
     config.apiSecret
   );
 
   return NextResponse.json(
-    { state: consent ? 'granted' : 'unknown' },
+    { state: consent?.state ?? 'unknown' },
     { headers: noStoreHeaders() }
   );
 }
@@ -93,9 +94,9 @@ export async function POST(request: NextRequest) {
 
   if (body.action === 'revoke') {
     return setConsentCookie(
-      NextResponse.json({ state: 'unknown' }, { headers: noStoreHeaders() }),
-      '',
-      0
+      NextResponse.json({ state: 'denied' }, { headers: noStoreHeaders() }),
+      createAnalyticsConsent('denied', config.apiSecret),
+      ANALYTICS_CONSENT_MAX_AGE_SECONDS
     );
   }
 

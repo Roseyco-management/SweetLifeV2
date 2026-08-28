@@ -68,8 +68,11 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
         return (await response.json()) as { state?: unknown };
       })
       .then((payload) => {
-        if (!cancelled && payload?.state === 'granted') {
-          setState('granted');
+        if (
+          !cancelled &&
+          (payload?.state === 'granted' || payload?.state === 'denied')
+        ) {
+          setState(payload.state);
         }
       })
       .catch(() => undefined)
@@ -103,8 +106,13 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
       if (!response.ok) return;
 
       const payload = (await response.json()) as { state?: unknown };
-      const nextState: BrowserConsentState =
-        action === 'grant' && payload.state === 'granted' ? 'granted' : 'denied';
+      const nextState: BrowserConsentState | null =
+        action === 'grant' && payload.state === 'granted'
+          ? 'granted'
+          : action === 'revoke' && payload.state === 'denied'
+            ? 'denied'
+            : null;
+      if (!nextState) return;
       setState(nextState);
       updateGoogleConsent(nextState);
     } catch {

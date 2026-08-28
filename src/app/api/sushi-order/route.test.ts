@@ -16,7 +16,11 @@ vi.mock('@/lib/googleConversionTracking', () => ({
 }));
 
 import { NextRequest } from 'next/server';
-import { createGrantedAnalyticsConsent, ANALYTICS_CONSENT_COOKIE } from '@/lib/analyticsConsent';
+import {
+  createAnalyticsConsent,
+  createGrantedAnalyticsConsent,
+  ANALYTICS_CONSENT_COOKIE,
+} from '@/lib/analyticsConsent';
 import { POST } from './route';
 
 const ORIGINAL_ENV = { ...process.env };
@@ -96,6 +100,20 @@ describe('POST /api/sushi-order conversion trigger', () => {
       makeRequest(
         acceptedOrderBody({ trackingConsent: true }),
         `_ga=GA1.1.123456789.987654321; ${ANALYTICS_CONSENT_COOKIE}=forged`
+      )
+    );
+
+    expect(response.status).toBe(200);
+    expect(afterMock).not.toHaveBeenCalled();
+  });
+
+  it('does not schedule reporting for a valid signed denial', async () => {
+    const consent = createAnalyticsConsent('denied', 'test-api-secret', NOW.getTime());
+
+    const response = await POST(
+      makeRequest(
+        acceptedOrderBody(),
+        `_ga=GA1.1.123456789.987654321; ${ANALYTICS_CONSENT_COOKIE}=${consent}`
       )
     );
 

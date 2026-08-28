@@ -5,18 +5,23 @@ export const ANALYTICS_CONSENT_MAX_AGE_SECONDS = 180 * 24 * 60 * 60;
 
 const VERSION = 1;
 const BASE64_URL_PATTERN = /^[A-Za-z0-9_-]+$/;
+export type AnalyticsConsentState = 'granted' | 'denied';
 
 interface AnalyticsConsentPayload {
   version: number;
-  state: 'granted';
+  state: AnalyticsConsentState;
   issuedAt: number;
   expiresAt: number;
 }
 
 export interface VerifiedAnalyticsConsent {
-  state: 'granted';
+  state: AnalyticsConsentState;
   issuedAt: number;
   expiresAt: number;
+}
+
+export interface VerifiedGrantedAnalyticsConsent extends VerifiedAnalyticsConsent {
+  state: 'granted';
 }
 
 function sign(encodedPayload: string, secret: string): string {
@@ -47,7 +52,7 @@ function isValidPayload(payload: unknown): payload is AnalyticsConsentPayload {
   const candidate = payload as Partial<AnalyticsConsentPayload>;
   return (
     candidate.version === VERSION &&
-    candidate.state === 'granted' &&
+    (candidate.state === 'granted' || candidate.state === 'denied') &&
     typeof candidate.issuedAt === 'number' &&
     isValidTimestamp(candidate.issuedAt) &&
     typeof candidate.expiresAt === 'number' &&
@@ -56,7 +61,11 @@ function isValidPayload(payload: unknown): payload is AnalyticsConsentPayload {
   );
 }
 
-export function createGrantedAnalyticsConsent(secret: string, now = Date.now()): string {
+export function createAnalyticsConsent(
+  state: AnalyticsConsentState,
+  secret: string,
+  now = Date.now()
+): string {
   const issuedAt = Math.floor(now);
   if (!secret || !isValidTimestamp(issuedAt)) {
     throw new Error('Cannot create an invalid analytics consent token.');
@@ -64,7 +73,7 @@ export function createGrantedAnalyticsConsent(secret: string, now = Date.now()):
 
   const payload: AnalyticsConsentPayload = {
     version: VERSION,
-    state: 'granted',
+    state,
     issuedAt,
     expiresAt: issuedAt + ANALYTICS_CONSENT_MAX_AGE_SECONDS * 1_000,
   };
@@ -73,7 +82,11 @@ export function createGrantedAnalyticsConsent(secret: string, now = Date.now()):
   return `${encodedPayload}.${sign(encodedPayload, secret)}`;
 }
 
-export function verifyGrantedAnalyticsConsent(
+export function createGrantedAnalyticsConsent(secret: string, now = Date.now()): string {
+  return createAnalyticsConsent('granted', secret, now);
+}
+
+export function verifyAnalyticsConsent(
   token: string | undefined,
   secret: string,
   now = Date.now()
@@ -107,8 +120,17 @@ export function verifyGrantedAnalyticsConsent(
   }
 
   return {
-    state: 'granted',
+    state: payload.state,
     issuedAt: payload.issuedAt,
     expiresAt: payload.expiresAt,
   };
+}
+
+export function verifyGrantedAnalyticsConsent(
+  token: string | undefined,
+  secret: string,
+  now = Date.now()
+): VerifiedGrantedAnalyticsConsent | null {
+  const consent = verifyAnalyticsConsent(token, secret, now);
+  return consent?.state === 'granted' ? { ...consent, state: 'granted' } : null;
 }
