@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Phone, Mail, Instagram, Facebook } from 'lucide-react';
+import { MapPin, Phone, Mail } from 'lucide-react';
+import { PUBLIC_BUSINESS_FACTS } from '@/lib/businessFacts';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -24,18 +25,8 @@ const Footer = () => {
             <p className="mb-4">
               A unique South Korean-style café offering creative and indulgent foods made fresh to order.
             </p>
-            <div className="flex space-x-4">
-              <a href="https://www.facebook.com/Sweet.Life.Ireland/" className="text-stone-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer" aria-label="Visit Sweet Life Ireland on Facebook">
-                <Facebook size={20} />
-              </a>
-              <a href="https://www.instagram.com/sweet_life_ireland" className="text-stone-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer" aria-label="Visit Sweet Life Ireland on Instagram">
-                <Instagram size={20} />
-              </a>
-              <a href="https://www.tiktok.com/@sweetlifeireland" className="text-stone-300 hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer" aria-label="Visit Sweet Life Ireland on TikTok">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-                </svg>
-              </a>
+            <div className="text-sm text-stone-400">
+              {PUBLIC_BUSINESS_FACTS.footer.socialProfiles}
             </div>
           </div>
 
@@ -79,12 +70,7 @@ const Footer = () => {
               </li>
               <li className="flex items-start">
                 <Phone size={18} className="mt-0.5 mr-3 text-primary flex-shrink-0" />
-                <a
-                  href="tel:+447716508513"
-                  className="hover:text-primary transition-colors"
-                >
-                  +447716508513
-                </a>
+                <span>{PUBLIC_BUSINESS_FACTS.footer.phone}</span>
               </li>
               <li className="flex items-start">
                 <Mail size={18} className="mt-0.5 mr-3 text-primary flex-shrink-0" />
@@ -100,23 +86,9 @@ const Footer = () => {
 
           <div>
             <h3 className="text-xl font-semibold text-white mb-4">Opening Hours</h3>
-            <div className="space-y-3">
-              <div className="bg-stone-800 px-3 py-2 rounded-lg border border-stone-700 text-center">
-                <p className="font-medium text-stone-300">Mon • Tue • Wed</p>
-                <p className="text-stone-400">8 am–6 pm</p>
-              </div>
-              <div className="bg-stone-800 px-3 py-2 rounded-lg border border-stone-700 text-center">
-                <p className="font-medium text-stone-300">Thu • Fri</p>
-                <p className="text-stone-400">8 am–8 pm</p>
-              </div>
-              <div className="bg-stone-800 px-3 py-2 rounded-lg border border-stone-700 text-center">
-                <p className="font-medium text-stone-300">Saturday</p>
-                <p className="text-stone-400">9 am–6 pm</p>
-              </div>
-              <div className="bg-red-900/20 px-3 py-2 rounded-lg border border-red-700/30 text-center">
-                <p className="font-medium text-red-300">Sunday</p>
-                <p className="text-red-400">Closed</p>
-              </div>
+            <div className="bg-stone-800 px-3 py-2 rounded-lg border border-stone-700 text-center">
+              <p className="text-stone-300">{PUBLIC_BUSINESS_FACTS.footer.hours}</p>
+              <p className="mt-2 text-sm text-stone-400">Please check with the café before travelling.</p>
             </div>
           </div>
         </div>

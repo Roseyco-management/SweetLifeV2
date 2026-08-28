@@ -1,4 +1,5 @@
 import { serializeJsonLd } from "@/lib/schema-utils";
+import { PUBLIC_BUSINESS_FACTS } from "@/lib/businessFacts";
 
 export default function StructuredData() {
   const structuredData = {
@@ -20,31 +21,10 @@ export default function StructuredData() {
       "latitude": 54.1754,
       "longitude": -6.3398
     },
-    "telephone": "+44 28 3044 8808",
     "url": "https://sweetlife.cafe",
     "email": "sweetlifenewry@gmail.com",
     "servesCuisine": ["Korean", "Cafe", "Sushi", "Desserts", "Bubble Tea"],
     "priceRange": "££",
-    "openingHoursSpecification": [
-      {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        "opens": "09:00",
-        "closes": "18:00"
-      },
-      {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": "Saturday",
-        "opens": "09:00",
-        "closes": "18:00"
-      },
-      {
-        "@type": "OpeningHoursSpecification",
-        "dayOfWeek": "Sunday",
-        "opens": "12:00",
-        "closes": "17:00"
-      }
-    ],
     "menu": "https://sweetlife.cafe/menu",
     "acceptsReservations": "True",
     "hasMenu": {
@@ -68,10 +48,7 @@ export default function StructuredData() {
         }
       ]
     },
-    "sameAs": [
-      "https://www.facebook.com/sweetlifenewry",
-      "https://www.instagram.com/sweetlifenewry"
-    ]
+    ...PUBLIC_BUSINESS_FACTS.schema
   };
 
   return (

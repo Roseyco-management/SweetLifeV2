@@ -2,6 +2,8 @@
 // AEO — full-content companion to /llms.txt (per the llms.txt convention:
 // llms.txt is the index, llms-full.txt is the complete text dump an AI can read
 // in one request). Ref: ElevateoCo/SEO-Resources guides/llms-txt-implementation.md.
+import { PUBLIC_BUSINESS_FACTS } from '@/lib/businessFacts';
+
 export const dynamic = 'force-static';
 
 const BASE_URL = 'https://sweetlife.cafe';
@@ -37,10 +39,10 @@ function buildLlmsFullTxt(): string {
 ## Business details
 - Name: Sweet Life Cafe
 - Address: 12 Monaghan Street, Newry, County Down, BT35 6AA, Northern Ireland
-- Phone: +44 7716 508513
+- Phone: ${PUBLIC_BUSINESS_FACTS.llms.phone}
 - Email: info@sweetlife.cafe
-- Hours: Mon-Wed 08:00-18:00, Thu-Fri 08:00-20:00, Sat 09:00-18:00, Sunday closed
-- Instagram: https://www.instagram.com/sweet_life_ireland
+- Hours: ${PUBLIC_BUSINESS_FACTS.llms.hours}
+- Official social profiles: ${PUBLIC_BUSINESS_FACTS.llms.socialProfiles}
 - Website: ${BASE_URL}
 
 ## Menu
